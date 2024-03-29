@@ -22,21 +22,6 @@ if "DOLLY_SERVER" in os.environ:
 logging.info("Using gemma server: " + gemma_server)
 logging.info("Using dolly server: " + dolly_server)
 
-"""
-callbacks = [streaming_stdout.StreamingStdOutCallbackHandler()]
-llm = HuggingFaceTextGenInference(
-    inference_server_url=model_server,
-    max_new_tokens=512,
-    typical_p=0.95,
-    temperature=0.01,
-    repetition_penalty=1.03,
-    callbacks=callbacks,
-    streaming=True
-)
-"""
-
-os.environ["HUGGINGFACEHUB_API_TOKEN"] = "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"
-
 gemma = HuggingFaceEndpoint(
     endpoint_url=gemma_server,
     max_new_tokens=256,
