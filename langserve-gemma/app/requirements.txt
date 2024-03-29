@@ -1,0 +1,6 @@
+uvicorn[standard]==0.27.1
+langserve[all] ==0.0.46
+pydantic==1.10.14
+langchain-community ==0.0.27
+fastapi==0.110.0
+text-generation==0.6.1

@@ -1,0 +1,72 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: tgi-gemma-dolly-deployment
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: gemma-dolly-server
+  template:
+    metadata:
+      labels:
+        app: gemma-dolly-server
+        ai.gke.io/model: gemma-7b-it-dolly
+        ai.gke.io/inference-server: text-generation-inference
+        examples.ai.gke.io/source: user-guide
+    spec:
+      containers:
+      - name: inference-server
+        image: us-docker.pkg.dev/vertex-ai/vertex-vision-model-garden-dockers/pytorch-hf-tgi-serve:20240220_0936_RC01
+        resources:
+          requests:
+            cpu: "2"
+            memory: "25Gi"
+            ephemeral-storage: "40Gi"
+            nvidia.com/gpu: "2"
+          limits:
+            cpu: "10"
+            memory: "25Gi"
+            ephemeral-storage: "40Gi"
+            nvidia.com/gpu: "2"
+        args:
+        - --model-id=$(MODEL_ID)
+        - --num-shard=2
+        env:
+        - name: MODEL_ID
+          value: moficodes/gemma-7b-dolly-finetune
+        - name: PORT
+          value: "8000"
+        - name: HUGGING_FACE_HUB_TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: hf-secret
+              key: hf_api_token
+        volumeMounts:
+        - mountPath: /dev/shm
+          name: dshm
+      volumes:
+      - name: dshm
+        emptyDir:
+          medium: Memory
+      nodeSelector:
+        cloud.google.com/gke-accelerator: nvidia-l4
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: gemma-dolly-service
+  annotations:
+    networking.gke.io/load-balancer-type: "Internal"
+    networking.gke.io/internal-load-balancer-allow-global-access: "true"
+spec:
+  selector:
+    app: gemma-dolly-server
+  type: LoadBalancer
+  loadBalancerIP: "10.128.15.225"
+  #loadBalancerIP: "10.150.0.15"
+  #loadBalancerIP: "10.142.0.22"
+  ports:
+  - protocol: TCP
+    port: 8000
+    targetPort: 8000
